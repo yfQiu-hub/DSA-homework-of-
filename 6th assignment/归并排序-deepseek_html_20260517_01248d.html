@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>归并排序可视化演示 | 分治算法 · 合并排序</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(145deg, #f1f5f9 0%, #e6edf4 100%);
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 24px 16px;
+        }
+
+        /* 主卡片 */
+        .merge-card {
+            max-width: 1300px;
+            width: 100%;
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(2px);
+            border-radius: 2.5rem;
+            box-shadow: 0 25px 45px -12px rgba(0,0,0,0.3), 0 2px 8px rgba(0,0,0,0.05);
+            overflow: hidden;
+            transition: all 0.2s;
+            border: 1px solid rgba(255,255,255,0.6);
+        }
+
+        /* 头部 */
+        .hero {
+            background: #0f172a;
+            padding: 1.5rem 2rem;
+            color: white;
+        }
+        .hero h1 {
+            margin: 0 0 0.25rem 0;
+            font-weight: 700;
+            font-size: 1.9rem;
+            letter-spacing: -0.01em;
+            background: linear-gradient(135deg, #fff, #a5f3fc);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+        .hero p {
+            margin: 0;
+            opacity: 0.8;
+            font-size: 0.95rem;
+        }
+        .algo-badge {
+            display: inline-block;
+            background: #2dd4bf20;
+            backdrop-filter: blur(4px);
+            border-radius: 40px;
+            padding: 4px 14px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-top: 12px;
+            border: 1px solid #2dd4bf40;
+        }
+
+        /* 控制栏 */
+        .control-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 1rem 2rem;
+            background: #ffffffdd;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .input-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            background: #f8fafc;
+            padding: 4px 12px;
+            border-radius: 60px;
+            border: 1px solid #cbd5e1;
+        }
+        .input-group input {
+            border: none;
+            background: transparent;
+            padding: 8px 0;
+            font-size: 0.9rem;
+            width: 220px;
+            outline: none;
+            font-family: monospace;
+            font-weight: 500;
+        }
+        .input-group button {
+            background: #1e293b;
+            border: none;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.8rem;
+        }
+        .input-group button:hover {
+            background: #0f172a;
+            transform: scale(0.96);
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .action-buttons button {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            padding: 6px 18px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.15s;
+            font-size: 0.85rem;
+            color: #1e293b;
+        }
+        .action-buttons button.primary {
+            background: #0f172a;
+            color: white;
+            border: none;
+        }
+        .action-buttons button.primary:hover {
+            background: #2d3a5e;
+        }
+        .action-buttons button:hover {
+            background: #e2e8f0;
+            transform: translateY(-1px);
+        }
+
+        /* 图例 */
+        .legend-panel {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            padding: 12px 2rem 8px;
+            background: #fefce8;
+            border-bottom: 1px solid #fde04730;
+            font-size: 0.75rem;
+        }
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .legend-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+
+        /* 可视化容器 */
+        .viz-wrapper {
+            padding: 20px 20px 10px 20px;
+            background: #f9fafb;
+        }
+        .viz-container {
+            background: #ffffff;
+            border-radius: 28px;
+            min-height: 380px;
+            padding: 20px 12px;
+            box-shadow: inset 0 1px 4px #00000008, 0 8px 20px -8px rgba(0,0,0,0.1);
+            border: 1px solid #eef2ff;
+            overflow-x: auto;
+            overflow-y: visible;
+            transition: all 0.2s;
+        }
+        .cards-area {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 10px;
+            min-width: max-content;
+            transition: all 0.3s ease;
+            position: relative;
+            margin-bottom: 28px;
+        }
+
+        /* 卡片样式 */
+        .card {
+            width: 56px;
+            background: linear-gradient(145deg, #3b82f6, #2563eb);
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            padding-bottom: 12px;
+            color: white;
+            font-weight: 700;
+            font-size: 1.1rem;
+            box-shadow: 0 6px 12px -4px rgba(0,0,0,0.2);
+            transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            position: relative;
+            will-change: transform, height;
+        }
+        .card-value {
+            font-size: 1rem;
+            font-weight: 700;
+            background: rgba(0,0,0,0.2);
+            width: 100%;
+            text-align: center;
+            padding: 4px 0;
+            border-radius: 0 0 12px 12px;
+            margin-top: 6px;
+        }
+        /* 不同状态 */
+        .card.merge-default {
+            background: linear-gradient(145deg, #3b82f6, #2563eb);
+        }
+        .card.merge-split {
+            background: linear-gradient(145deg, #f59e0b, #d97706);
+            box-shadow: 0 0 0 2px #fbbf24;
+        }
+        .card.merge-merging {
+            background: linear-gradient(145deg, #8b5cf6, #7c3aed);
+            box-shadow: 0 0 0 2px #c4b5fd;
+            transform: scale(1.02);
+        }
+        .card.merge-sorted {
+            background: linear-gradient(145deg, #10b981, #059669);
+            box-shadow: 0 6px 12px -4px #10b98160;
+        }
+        .card.merge-compare {
+            background: linear-gradient(145deg, #f97316, #ea580c);
+            animation: pulse-light 0.5s ease-out;
+        }
+        .card.merge-pivot {
+            background: #ec4899;
+        }
+
+        @keyframes pulse-light {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.08); background: #f43f5e; box-shadow: 0 0 0 3px #fecdd3; }
+            100% { transform: scale(1); }
+        }
+
+        /* 索引标签 */
+        .index-label {
+            text-align: center;
+            font-size: 11px;
+            margin-top: 8px;
+            font-weight: 500;
+            color: #475569;
+            background: #f1f5f9;
+            width: fit-content;
+            padding: 2px 6px;
+            border-radius: 20px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* 步骤信息面板 */
+        .info-panel {
+            background: #fef9e3;
+            border-radius: 1.5rem;
+            margin: 12px 20px 16px 20px;
+            padding: 16px 20px;
+            border-left: 5px solid #f59e0b;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+        }
+        .step-desc {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 6px;
+        }
+        .step-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: #5b6e8c;
+            margin-top: 8px;
+        }
+        .progress-badge {
+            background: #e2e8f0;
+            padding: 4px 12px;
+            border-radius: 60px;
+        }
+
+        /* 底部播放条 */
+        .playback-bar {
+            display: flex;
+            justify-content: center;
+            gap: 14px;
+            padding: 0 20px 24px 20px;
+        }
+        .playback-bar button {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            padding: 8px 26px;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .playback-bar button:active { transform: translateY(1px);}
+        .playback-bar button:hover { background: #f1f5f9; border-color: #94a3b8;}
+
+        /* 子数组范围指示器 */
+        .range-badge {
+            position: absolute;
+            top: -28px;
+            font-size: 10px;
+            background: #334155cc;
+            backdrop-filter: blur(4px);
+            color: white;
+            padding: 2px 10px;
+            border-radius: 20px;
+            white-space: nowrap;
+            font-weight: 500;
+            pointer-events: none;
+        }
+
+        @media (max-width: 680px) {
+            .card { width: 42px; font-size: 0.9rem; }
+            .input-group input { width: 150px; }
+            .control-bar { flex-direction: column; align-items: stretch; }
+            .action-buttons { justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="merge-card">
+    <div class="hero">
+        <h1>⚡ 归并排序 · 分治精粹</h1>
+        <p>递归分解 → 归并合并，每一步清晰展示子区间与比较过程</p>
+        <div class="algo-badge">🎯 稳定排序 | 时间复杂度 O(n log n) | 空间 O(n)</div>
+    </div>
+
+    <div class="control-bar">
+        <div class="input-group">
+            <input type="text" id="arrayInput" placeholder="例如: 38,27,43,3,9,82,10" value="38,27,43,3,9,82,10">
+            <button id="genBtn">生成 & 重置</button>
+        </div>
+        <div class="action-buttons">
+            <button id="resetBtn">⟳ 重置演示</button>
+        </div>
+    </div>
+
+    <div class="legend-panel">
+        <span class="legend-item"><span class="legend-dot" style="background:#3b82f6;"></span> 未处理</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#f59e0b;"></span> 正在分解区间</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#8b5cf6;"></span> 合并中（比较/归并）</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#10b981;"></span> 已完全归位</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#f97316;"></span> 高亮比较元素</span>
+    </div>
+
+    <div class="viz-wrapper">
+        <div class="viz-container" id="mergeVizContainer">
+            <div class="cards-area" id="cardsArea"></div>
+        </div>
+    </div>
+
+    <div class="info-panel">
+        <div class="step-desc" id="stepDesc">✨ 点击「生成数组」或「下一步」开始归并之旅</div>
+        <div class="step-meta">
+            <span id="stepCounter">- / -</span>
+            <span class="progress-badge" id="phaseBadge">⚙️ 就绪</span>
+        </div>
+    </div>
+
+    <div class="playback-bar">
+        <button id="prevBtn">◀ 上一步</button>
+        <button id="playBtn">▶ 自动播放</button>
+        <button id="nextBtn">下一步 ▶</button>
+    </div>
+</div>
+
+<script>
+    // --------------------------------------------------------------
+    // 归并排序步骤生成器 （细化分治 + 合并过程的完整轨迹）
+    // --------------------------------------------------------------
+    class MergeSortVisualizer {
+        constructor(originalArr) {
+            this.original = [...originalArr];
+            this.steps = [];      // 存储快照
+            this.generateSteps();
+        }
+
+        // 深拷贝当前数组状态（包含额外状态字段）
+        snapshot(arrState, description, focusIndices = [], extras = {}) {
+            const cloned = arrState.map(item => ({ ...item }));
+            this.steps.push({
+                array: cloned,
+                desc: description,
+                focus: [...focusIndices],
+                extras: { ...extras }
+            });
+        }
+
+        generateSteps() {
+            const n = this.original.length;
+            if (n === 0) return;
+            // 初始化数组：每个元素 { value, state, id(索引保持独立) }
+            let arr = this.original.map((val, idx) => ({ value: val, state: 'merge-default', id: idx }));
+            this.snapshot(arr, `📋 初始数组: [${this.original.join(', ')}] 共 ${n} 个元素`, []);
+
+            // 归并排序辅助函数 (递归生成详细步骤)
+            const mergeSortRec = (l, r, currentArr) => {
+                if (l === r) {
+                    // 单元素区间标记为已排序 (其实归并到底层已有序)
+                    currentArr[l].state = 'merge-sorted';
+                    this.snapshot(currentArr, `🔍 单元素区间 [${l}, ${l}] 天然有序`, [l], { range: [l, l] });
+                    return;
+                }
+                const mid = Math.floor((l + r) / 2);
+                // 高亮分解区间
+                for (let i = l; i <= r; i++) {
+                    if (currentArr[i].state !== 'merge-sorted') currentArr[i].state = 'merge-split';
+                }
+                this.snapshot(currentArr, `🔀 分解区间 [${l}, ${r}]，分割点 mid = ${mid}`, [], { range: [l, r], split: mid });
+                
+                // 递归左半部分
+                mergeSortRec(l, mid, currentArr);
+                // 递归右半部分
+                mergeSortRec(mid + 1, r, currentArr);
+                
+                // 归并步骤: 合并 [l, mid] 和 [mid+1, r]
+                // 为了表现归并细节，创建临时数组来模拟比较过程
+                this.mergeAndVisualize(l, mid, r, currentArr);
+            };
+            
+            this.mergeAndVisualize = (l, mid, r, arrState) => {
+                // 生成辅助数组, 但是为了步骤演示，我们将逐步展示比较与填入的动作
+                const leftArr = arrState.slice(l, mid + 1).map(x => x.value);
+                const rightArr = arrState.slice(mid + 1, r + 1).map(x => x.value);
+                let i = 0, j = 0, k = l;
+                const originalValues = arrState.map(x => x.value);
+                
+                // 记录原始区间以便回显
+                this.snapshot(arrState, `⚙️ 开始合并区间 [${l}, ${mid}] 和 [${mid+1}, ${r}]`, [], { range: [l, r], merging: true, leftPart: [l,mid], rightPart: [mid+1,r] });
+                
+                while (i < leftArr.length && j < rightArr.length) {
+                    // 比较步骤：高亮两个对比元素
+                    const leftIdx = l + i;
+                    const rightIdx = mid + 1 + j;
+                    // 临时高亮比较
+                    const compareSnapshot = arrState.map((item, idx) => {
+                        const newItem = { ...item };
+                        if (idx === leftIdx) newItem.state = 'merge-compare';
+                        else if (idx === rightIdx) newItem.state = 'merge-compare';
+                        else if (idx >= l && idx <= r && newItem.state !== 'merge-sorted') newItem.state = 'merge-merging';
+                        return newItem;
+                    });
+                    this.snapshot(compareSnapshot, `🔎 比较 arr[${leftIdx}] = ${arrState[leftIdx].value} 与 arr[${rightIdx}] = ${arrState[rightIdx].value}`, [leftIdx, rightIdx], { range: [l, r], comparePos: [leftIdx, rightIdx] });
+                    
+                    let chosenVal;
+                    let chosenSrcIdx;
+                    if (leftArr[i] <= rightArr[j]) {
+                        chosenVal = leftArr[i];
+                        chosenSrcIdx = leftIdx;
+                        i++;
+                    } else {
+                        chosenVal = rightArr[j];
+                        chosenSrcIdx = rightIdx;
+                        j++;
+                    }
+                    // 更新arrState数组的值 (模拟归并放置)
+                    const afterCompareArr = arrState.map((item, idx) => {
+                        if (idx === k) {
+                            return { value: chosenVal, state: 'merge-merging', id: item.id };
+                        }
+                        return { ...item };
+                    });
+                    // 但为了让步骤清晰，独立展示放置
+                    this.snapshot(afterCompareArr, `✅ 将较小值 ${chosenVal} 放入 arr[${k}]`, [k], { range: [l, r], placedPos: k });
+                    // 真正修改 arrState 内容
+                    arrState[k] = { value: chosenVal, state: 'merge-merging', id: arrState[k].id };
+                    k++;
+                }
+                
+                // 剩余左部分
+                while (i < leftArr.length) {
+                    const val = leftArr[i];
+                    const leftIdx = l + i;
+                    this.snapshot(arrState, `📌 左剩余元素 ${val} 放入 arr[${k}]`, [k], { range: [l, r] });
+                    arrState[k] = { value: val, state: 'merge-merging', id: arrState[k].id };
+                    k++;
+                    i++;
+                }
+                // 剩余右部分
+                while (j < rightArr.length) {
+                    const val = rightArr[j];
+                    const rightIdx = mid + 1 + j;
+                    this.snapshot(arrState, `📌 右剩余元素 ${val} 放入 arr[${k}]`, [k], { range: [l, r] });
+                    arrState[k] = { value: val, state: 'merge-merging', id: arrState[k].id };
+                    k++;
+                    j++;
+                }
+                
+                // 区间全部归并完成，标记已排序状态
+                for (let idx = l; idx <= r; idx++) {
+                    arrState[idx].state = 'merge-sorted';
+                }
+                this.snapshot(arrState, `🎉 区间 [${l}, ${r}] 归并完成，已有序`, Array.from({length: r-l+1}, (_,i)=>l+i), { range: [l, r], complete: true });
+            };
+            
+            // 启动递归全范围
+            mergeSortRec(0, n-1, arr);
+            // 最终把所有元素标记为 sorted 并展示完成
+            const finalArr = arr.map(item => ({ ...item, state: 'merge-sorted' }));
+            this.snapshot(finalArr, `🏆 排序完成！数组已升序排列`, [], { final: true });
+        }
+    }
+
+    // --------------------------------------------------------------
+    // UI 渲染与控制器
+    // --------------------------------------------------------------
+    class MergeVisualizerUI {
+        constructor() {
+            this.currentSteps = [];
+            this.currentIndex = -1;
+            this.timer = null;
+            this.isPlaying = false;
+            this.currentRawArray = [];
+            
+            // DOM 元素
+            this.cardsArea = document.getElementById('cardsArea');
+            this.stepDesc = document.getElementById('stepDesc');
+            this.stepCounterSpan = document.getElementById('stepCounter');
+            this.phaseBadge = document.getElementById('phaseBadge');
+            
+            this.arrayInput = document.getElementById('arrayInput');
+            this.genBtn = document.getElementById('genBtn');
+            this.resetBtn = document.getElementById('resetBtn');
+            this.prevBtn = document.getElementById('prevBtn');
+            this.nextBtn = document.getElementById('nextBtn');
+            this.playBtn = document.getElementById('playBtn');
+            
+            this.bindEvents();
+            // 初始默认生成一组数据
+            this.generateFromInput();
+        }
+        
+        bindEvents() {
+            this.genBtn.addEventListener('click', () => this.generateFromInput());
+            this.resetBtn.addEventListener('click', () => this.resetToCurrent());
+            this.prevBtn.addEventListener('click', () => this.prevStep());
+            this.nextBtn.addEventListener('click', () => this.nextStep());
+            this.playBtn.addEventListener('click', () => this.togglePlay());
+        }
+        
+        generateFromInput() {
+            this.stopAutoPlay();
+            let raw = this.arrayInput.value;
+            let numbers = raw.split(/[ ,，]+/).filter(s => s.trim().length > 0).map(Number).filter(v => !isNaN(v));
+            if (numbers.length === 0) numbers = [5, 2, 9, 1, 7, 6];
+            if (numbers.length > 18) numbers = numbers.slice(0, 18);  // 限制过多卡片
+            this.currentRawArray = [...numbers];
+            const visualizer = new MergeSortVisualizer(this.currentRawArray);
+            this.currentSteps = visualizer.steps;
+            this.currentIndex = 0;
+            this.renderCurrentStep();
+            this.updateInfoPanel();
+        }
+        
+        resetToCurrent() {
+            if (this.currentRawArray.length === 0) {
+                this.generateFromInput();
+                return;
+            }
+            this.stopAutoPlay();
+            const visualizer = new MergeSortVisualizer(this.currentRawArray);
+            this.currentSteps = visualizer.steps;
+            this.currentIndex = 0;
+            this.renderCurrentStep();
+            this.updateInfoPanel();
+        }
+        
+        renderCurrentStep() {
+            if (!this.currentSteps.length || this.currentIndex < 0 || this.currentIndex >= this.currentSteps.length) {
+                if(this.currentSteps.length === 0) this.cardsArea.innerHTML = '<div style="padding:40px;text-align:center">无数据，请生成数组</div>';
+                return;
+            }
+            const step = this.currentSteps[this.currentIndex];
+            const arr = step.array;
+            // 计算最大高度范围 (动态)
+            const maxVal = Math.max(...arr.map(a => a.value), 1);
+            const baseHeight = 140;
+            const unit = Math.min(130 / maxVal, 4.5);
+            
+            // 重新构建卡片
+            this.cardsArea.innerHTML = '';
+            const cardWidth = 56;
+            arr.forEach((item, idx) => {
+                const cardWrapper = document.createElement('div');
+                cardWrapper.style.display = 'flex';
+                cardWrapper.style.flexDirection = 'column';
+                cardWrapper.style.alignItems = 'center';
+                cardWrapper.style.marginRight = '6px';
+                
+                const cardDiv = document.createElement('div');
+                cardDiv.className = `card ${item.state || 'merge-default'}`;
+                const heightVal = Math.max(48, Math.floor(item.value * unit) + 20);
+                cardDiv.style.height = `${heightVal}px`;
+                cardDiv.style.width = `${cardWidth}px`;
+                cardDiv.style.display = 'flex';
+                cardDiv.style.justifyContent = 'flex-end';
+                const valSpan = document.createElement('span');
+                valSpan.className = 'card-value';
+                valSpan.textContent = item.value;
+                cardDiv.appendChild(valSpan);
+                
+                const indexSpan = document.createElement('div');
+                indexSpan.className = 'index-label';
+                indexSpan.textContent = idx;
+                
+                cardWrapper.appendChild(cardDiv);
+                cardWrapper.appendChild(indexSpan);
+                this.cardsArea.appendChild(cardWrapper);
+                
+                // 高亮焦点元素
+                if (step.focus && step.focus.includes(idx)) {
+                    cardDiv.style.boxShadow = '0 0 0 3px #f97316, 0 8px 18px black';
+                    cardDiv.style.transform = 'translateY(-6px)';
+                }
+            });
+            
+            // 绘制区间范围指示器 (利用相对定位)
+            if (step.extras && step.extras.range) {
+                const [l, r] = step.extras.range;
+                const cards = document.querySelectorAll('#cardsArea > div');
+                if (cards.length && l >=0 && r < cards.length) {
+                    // 移除旧的指示器
+                    const oldIndic = this.cardsArea.querySelectorAll('.range-badge');
+                    oldIndic.forEach(el => el.remove());
+                    const leftCard = cards[l];
+                    const rightCard = cards[r];
+                    if (leftCard && rightCard) {
+                        const leftRect = leftCard.getBoundingClientRect();
+                        const rightRect = rightCard.getBoundingClientRect();
+                        const containerRect = this.cardsArea.getBoundingClientRect();
+                        const leftOffset = leftRect.left - containerRect.left;
+                        const rightOffset = rightRect.right - containerRect.left;
+                        const badge = document.createElement('div');
+                        badge.className = 'range-badge';
+                        let rangeText = `区间 [${l} , ${r}]`;
+                        if (step.extras.split !== undefined) rangeText += `  分割点 ${step.extras.split}`;
+                        if (step.extras.merging) rangeText = `🔗 归并区间 [${l}..${midShow(step)}] + [${(step.extras.leftPart?.[1]??0)+1}..${r}]`;
+                        badge.textContent = rangeText;
+                        badge.style.left = `${leftOffset}px`;
+                        badge.style.width = `${rightOffset - leftOffset}px`;
+                        badge.style.position = 'absolute';
+                        badge.style.top = '-28px';
+                        badge.style.background = '#0f172ad9';
+                        badge.style.borderRadius = '20px';
+                        badge.style.fontSize = '10px';
+                        badge.style.padding = '2px 12px';
+                        badge.style.whiteSpace = 'nowrap';
+                        this.cardsArea.style.position = 'relative';
+                        this.cardsArea.appendChild(badge);
+                        setTimeout(() => { if(badge.parentNode) badge.remove(); }, 1500);
+                    }
+                }
+            }
+            
+            this.stepDesc.innerHTML = step.desc;
+            this.phaseBadge.innerText = `步骤 ${this.currentIndex+1} / ${this.currentSteps.length}`;
+            this.stepCounterSpan.innerText = `📌 第 ${this.currentIndex+1} 步 总计 ${this.currentSteps.length}`;
+        }
+        
+        updateInfoPanel() {
+            if(this.currentSteps.length && this.currentIndex >=0) {
+                this.stepDesc.innerHTML = this.currentSteps[this.currentIndex].desc;
+            }
+        }
+        
+        nextStep() {
+            if (this.currentSteps.length === 0) {
+                this.generateFromInput();
+                return;
+            }
+            if (this.currentIndex < this.currentSteps.length - 1) {
+                this.currentIndex++;
+                this.renderCurrentStep();
+                this.updateInfoPanel();
+            } else {
+                this.stopAutoPlay();
+                this.stepDesc.innerHTML = '🏁 排序演示已完成，点击「重置」再次观察';
+            }
+        }
+        
+        prevStep() {
+            if (this.currentSteps.length === 0) return;
+            if (this.currentIndex > 0) {
+                this.currentIndex--;
+                this.renderCurrentStep();
+                this.updateInfoPanel();
+            } else if (this.currentIndex === 0) {
+                this.stepDesc.innerHTML = '👋 已是第一步，点击生成数组或重置从头开始';
+            }
+        }
+        
+        togglePlay() {
+            if (this.isPlaying) {
+                this.stopAutoPlay();
+            } else {
+                this.startAutoPlay();
+            }
+        }
+        
+        startAutoPlay() {
+            if (this.currentSteps.length === 0) {
+                this.generateFromInput();
+                return;
+            }
+            if (this.currentIndex >= this.currentSteps.length - 1) {
+                this.currentIndex = -1;
+            }
+            this.isPlaying = true;
+            this.playBtn.innerText = '⏸ 暂停';
+            this.timer = setInterval(() => {
+                if (this.currentIndex < this.currentSteps.length - 1) {
+                    this.currentIndex++;
+                    this.renderCurrentStep();
+                    this.updateInfoPanel();
+                } else {
+                    this.stopAutoPlay();
+                    this.stepDesc.innerHTML = '✨ 归并排序完成！点击重置可重新播放';
+                }
+            }, 900);
+        }
+        
+        stopAutoPlay() {
+            if (this.timer) clearInterval(this.timer);
+            this.isPlaying = false;
+            this.playBtn.innerText = '▶ 自动播放';
+            this.timer = null;
+        }
+    }
+    
+    function midShow(step) {
+        if(step.extras && step.extras.split !== undefined) return step.extras.split;
+        if(step.extras.leftPart) return step.extras.leftPart[1];
+        return '?';
+    }
+    
+    // 启动
+    window.addEventListener('DOMContentLoaded', () => {
+        new MergeVisualizerUI();
+    });
+</script>
+</body>
+</html>
