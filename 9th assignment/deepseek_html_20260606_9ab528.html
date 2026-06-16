@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AVL树构建演示 - 失衡前后对比</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', monospace;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb4d);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 10px;
+            font-size: 2em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #ffd700;
+            margin-bottom: 20px;
+        }
+
+        .input-area {
+            background: rgba(255,255,255,0.2);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .input-area input {
+            padding: 10px 15px;
+            width: 300px;
+            font-size: 1em;
+            border: none;
+            border-radius: 25px;
+            margin-right: 10px;
+            font-family: monospace;
+        }
+
+        .input-area button {
+            background: #ffd700;
+            border: none;
+            padding: 10px 25px;
+            font-size: 1em;
+            font-weight: bold;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .input-area button:hover {
+            transform: translateY(-2px);
+            background: #ffed4a;
+        }
+
+        .current-seq {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 10px;
+            margin-top: 10px;
+            color: white;
+            font-family: monospace;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: #ffd700;
+            border: none;
+            padding: 10px 25px;
+            font-size: 1em;
+            font-weight: bold;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #1e3c72;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            background: #ffed4a;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .step-indicator {
+            text-align: center;
+            margin-bottom: 15px;
+            color: white;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .step-info {
+            background: white;
+            border-radius: 15px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .step-title {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #1e3c72;
+            margin-bottom: 10px;
+            border-left: 5px solid #ffd700;
+            padding-left: 15px;
+        }
+
+        .balance-info, .action-info {
+            background: #e8f4f8;
+            padding: 8px 15px;
+            border-radius: 10px;
+            margin: 8px 0;
+            font-family: monospace;
+            font-size: 1em;
+        }
+
+        .imbalance {
+            background: #ffe0e0;
+            border-left: 5px solid #ff4444;
+            padding: 10px 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            font-weight: bold;
+            color: #cc0000;
+        }
+
+        .rotation {
+            background: #e0ffe0;
+            border-left: 5px solid #44cc44;
+            padding: 10px 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            font-weight: bold;
+            color: #006600;
+        }
+
+        .tree-panel {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tree-card {
+            flex: 1;
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            min-width: 300px;
+        }
+
+        .tree-card h3 {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #1e3c72;
+            border-bottom: 2px solid #ffd700;
+            padding-bottom: 8px;
+        }
+
+        .tree-canvas-container {
+            overflow-x: auto;
+            text-align: center;
+        }
+
+        canvas {
+            background: #fafafa;
+            border-radius: 10px;
+            margin: 0 auto;
+            display: block;
+            border: 1px solid #ddd;
+        }
+
+        .arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #ffd700;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .inorder {
+            margin-top: 20px;
+            padding: 15px;
+            background: #2c3e50;
+            border-radius: 10px;
+            text-align: center;
+            font-family: monospace;
+            font-size: 1.1em;
+            color: white;
+        }
+
+        @media (max-width: 900px) {
+            .tree-panel {
+                flex-direction: column;
+            }
+            .arrow {
+                transform: rotate(90deg);
+                margin: 5px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🌳 AVL 树构建演示 - 失衡前后对比</h1>
+    <div class="subtitle">观察插入结点后，失衡前的状态 vs 旋转平衡后的状态</div>
+
+    <div class="input-area">
+        <input type="text" id="seqInput" placeholder="输入数字，用逗号分隔，如: 30,20,10,25,40,35,50" value="30,20,10,25,40,35,50">
+        <button id="setSeqBtn">📌 设置序列并重置</button>
+        <div class="current-seq" id="currentSeqDisplay">当前序列: 30, 20, 10, 25, 40, 35, 50</div>
+    </div>
+
+    <div class="controls">
+        <button id="prevBtn" disabled>◀ 上一步</button>
+        <button id="resetBtn">🔄 重置</button>
+        <button id="nextBtn">下一步 ▶</button>
+    </div>
+
+    <div class="step-indicator" id="stepIndicator">第 0 / 0 步</div>
+
+    <div class="step-info" id="stepInfo">
+        <div class="step-title" id="stepTitle">📌 初始状态</div>
+        <div id="stepDetail">空树，等待插入</div>
+    </div>
+
+    <div class="tree-panel" id="treePanel">
+        <div class="tree-card">
+            <h3>⚠️ 失衡前（插入后未旋转）</h3>
+            <div class="tree-canvas-container"><canvas id="treeBefore" width="400" height="400"></canvas></div>
+        </div>
+        <div class="arrow">➡️ 🔄 ⬅️</div>
+        <div class="tree-card">
+            <h3>✅ 旋转平衡后</h3>
+            <div class="tree-canvas-container"><canvas id="treeAfter" width="400" height="400"></canvas></div>
+        </div>
+    </div>
+
+    <div class="inorder" id="inorderResult">
+        📋 中序遍历: 
+    </div>
+</div>
+
+<script>
+    class AVLNode {
+        constructor(val) {
+            this.val = val;
+            this.left = null;
+            this.right = null;
+            this.height = 1;
+        }
+    }
+
+    function getHeight(node) { return node ? node.height : 0; }
+    function getBalance(node) { return node ? getHeight(node.left) - getHeight(node.right) : 0; }
+    function updateHeight(node) { node.height = 1 + Math.max(getHeight(node.left), getHeight(node.right)); }
+
+    function rotateRight(y) {
+        let x = y.left;
+        let T2 = x.right;
+        x.right = y;
+        y.left = T2;
+        updateHeight(y);
+        updateHeight(x);
+        return x;
+    }
+
+    function rotateLeft(x) {
+        let y = x.right;
+        let T2 = y.left;
+        y.left = x;
+        x.right = T2;
+        updateHeight(x);
+        updateHeight(y);
+        return y;
+    }
+
+    // 深拷贝树
+    function cloneTree(node) {
+        if (!node) return null;
+        let newNode = new AVLNode(node.val);
+        newNode.height = node.height;
+        newNode.left = cloneTree(node.left);
+        newNode.right = cloneTree(node.right);
+        return newNode;
+    }
+
+    // 标记失衡节点为红色
+    function markImbalanceNode(node, imbalanceVal) {
+        if (!node) return null;
+        let newNode = new AVLNode(node.val);
+        newNode.height = node.height;
+        newNode.left = markImbalanceNode(node.left, imbalanceVal);
+        newNode.right = markImbalanceNode(node.right, imbalanceVal);
+        newNode.isImbalance = (node.val === imbalanceVal);
+        return newNode;
+    }
+
+    // 绘制树
+    function drawTree(ctx, root, x, y, xOffset, levelHeight, nodeRadius = 22, highlightVal = null) {
+        if (!root) return;
+
+        let isHighlight = (highlightVal !== null && root.val === highlightVal) || root.isImbalance === true;
+        
+        ctx.beginPath();
+        ctx.arc(x, y, nodeRadius, 0, 2 * Math.PI);
+        ctx.fillStyle = isHighlight ? "#ff6666" : "#4CAF50";
+        ctx.fill();
+        ctx.strokeStyle = "#2E7D32";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        let bf = getBalance(root);
+        ctx.fillStyle = "white";
+        ctx.font = "bold 16px 'Segoe UI'";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(root.val, x, y - 5);
+        ctx.font = "12px monospace";
+        ctx.fillStyle = "#ffd700";
+        ctx.fillText(`bf=${bf}`, x, y + 12);
+
+        let childXOffset = xOffset / 2;
+        let childY = y + levelHeight;
+
+        if (root.left) {
+            ctx.beginPath();
+            ctx.moveTo(x - nodeRadius * 0.7, y + nodeRadius * 0.7);
+            ctx.lineTo(x - childXOffset + nodeRadius * 0.7, childY - nodeRadius * 0.7);
+            ctx.strokeStyle = "#666";
+            ctx.stroke();
+            drawTree(ctx, root.left, x - childXOffset, childY, childXOffset, levelHeight, nodeRadius, highlightVal);
+        }
+
+        if (root.right) {
+            ctx.beginPath();
+            ctx.moveTo(x + nodeRadius * 0.7, y + nodeRadius * 0.7);
+            ctx.lineTo(x + childXOffset - nodeRadius * 0.7, childY - nodeRadius * 0.7);
+            ctx.stroke();
+            drawTree(ctx, root.right, x + childXOffset, childY, childXOffset, levelHeight, nodeRadius, highlightVal);
+        }
+    }
+
+    function renderTreeOnCanvas(canvasId, root, highlightNode = null) {
+        let canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        let ctx = canvas.getContext('2d');
+        let container = canvas.parentElement;
+        let width = container.clientWidth > 100 ? container.clientWidth : 400;
+        canvas.width = Math.max(width, 400);
+        canvas.height = 400;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#fafafa";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        if (root) {
+            drawTree(ctx, root, canvas.width / 2, 60, canvas.width / 3, 70, 22, highlightNode);
+        } else {
+            ctx.fillStyle = "#999";
+            ctx.font = "18px 'Segoe UI'";
+            ctx.textAlign = "center";
+            ctx.fillText("🌱 空树", canvas.width / 2, canvas.height / 2);
+        }
+    }
+
+    function inorder(node, res) {
+        if (node) { inorder(node.left, res); res.push(node.val); inorder(node.right, res); }
+    }
+
+    // 插入并记录失衡前后
+    function buildSteps(sequence) {
+        let steps = [];
+        let currentRoot = null;
+        
+        steps.push({
+            type: 'initial',
+            beforeTree: null,
+            finalTree: null,
+            inserted: null,
+            action: '空树',
+            imbalanceType: null,
+            rotationDesc: null,
+            imbalanceNode: null,
+            bfValue: null
+        });
+
+        for (let i = 0; i < sequence.length; i++) {
+            let val = sequence[i];
+            let beforeTree = cloneTree(currentRoot);
+            
+            // 模拟插入得到失衡前的树（未旋转）
+            let tempRoot = cloneTree(currentRoot);
+            let imbalanceInfo = { type: null, node: null, rotationDesc: null };
+            
+            function insertAndRecord(root, val, info) {
+                if (!root) return new AVLNode(val);
+                if (val < root.val) root.left = insertAndRecord(root.left, val, info);
+                else if (val > root.val) root.right = insertAndRecord(root.right, val, info);
+                else return root;
+                updateHeight(root);
+                let balance = getBalance(root);
+                
+                if (balance > 1 && val < root.left.val) {
+                    info.type = "LL"; info.node = root.val; info.rotationDesc = `右旋 ${root.val}`;
+                }
+                else if (balance < -1 && val > root.right.val) {
+                    info.type = "RR"; info.node = root.val; info.rotationDesc = `左旋 ${root.val}`;
+                }
+                else if (balance > 1 && val > root.left.val) {
+                    info.type = "LR"; info.node = root.val; info.rotationDesc = `左旋 ${root.left.val} → 右旋 ${root.val}`;
+                }
+                else if (balance < -1 && val < root.right.val) {
+                    info.type = "RL"; info.node = root.val; info.rotationDesc = `右旋 ${root.right.val} → 左旋 ${root.val}`;
+                }
+                return root;
+            }
+            
+            let afterImbalanceTree = cloneTree(tempRoot);
+            insertAndRecord(afterImbalanceTree, val, imbalanceInfo);
+            
+            // 执行真正的插入和旋转得到最终树
+            let finalRoot = cloneTree(currentRoot);
+            function insertFinal(root, val) {
+                if (!root) return new AVLNode(val);
+                if (val < root.val) root.left = insertFinal(root.left, val);
+                else if (val > root.val) root.right = insertFinal(root.right, val);
+                else return root;
+                updateHeight(root);
+                let balance = getBalance(root);
+                if (balance > 1 && val < root.left.val) return rotateRight(root);
+                if (balance < -1 && val > root.right.val) return rotateLeft(root);
+                if (balance > 1 && val > root.left.val) {
+                    root.left = rotateLeft(root.left);
+                    return rotateRight(root);
+                }
+                if (balance < -1 && val < root.right.val) {
+                    root.right = rotateRight(root.right);
+                    return rotateLeft(root);
+                }
+                return root;
+            }
+            finalRoot = insertFinal(finalRoot, val);
+            
+            // 计算失衡结点的平衡因子
+            let bfValue = null;
+            if (imbalanceInfo.node && afterImbalanceTree) {
+                function findBf(node, target) {
+                    if (!node) return null;
+                    if (node.val === target) return getBalance(node);
+                    return findBf(node.left, target) || findBf(node.right, target);
+                }
+                bfValue = findBf(afterImbalanceTree, imbalanceInfo.node);
+            }
+            
+            steps.push({
+                type: 'insert',
+                inserted: val,
+                beforeTree: afterImbalanceTree,
+                finalTree: finalRoot,
+                imbalanceType: imbalanceInfo.type,
+                rotationDesc: imbalanceInfo.rotationDesc,
+                imbalanceNode: imbalanceInfo.node,
+                bfValue: bfValue
+            });
+            
+            currentRoot = finalRoot;
+        }
+        return steps;
+    }
+
+    let currentSequence = [30, 20, 10, 25, 40, 35, 50];
+    let steps = [];
+    let currentStepIdx = 0;
+
+    function rebuildSteps() {
+        steps = buildSteps(currentSequence);
+        currentStepIdx = 0;
+        renderCurrentStep();
+    }
+
+    function renderCurrentStep() {
+        let step = steps[currentStepIdx];
+        let stepIndicator = document.getElementById('stepIndicator');
+        let stepTitle = document.getElementById('stepTitle');
+        let stepDetail = document.getElementById('stepDetail');
+        let inorderDiv = document.getElementById('inorderResult');
+        
+        stepIndicator.innerText = `第 ${currentStepIdx} / ${steps.length - 1} 步`;
+        
+        if (step.type === 'initial') {
+            stepTitle.innerHTML = `📌 初始状态`;
+            stepDetail.innerHTML = `<div class="action-info">🌱 空树，等待插入</div>`;
+            renderTreeOnCanvas('treeBefore', null);
+            renderTreeOnCanvas('treeAfter', null);
+            inorderDiv.innerHTML = `📋 中序遍历: []`;
+        } 
+        else if (step.type === 'insert') {
+            let hasImbalance = step.imbalanceType !== null;
+            let markedBeforeTree = null;
+            if (hasImbalance && step.beforeTree) {
+                markedBeforeTree = markImbalanceNode(step.beforeTree, step.imbalanceNode);
+            }
+            
+            renderTreeOnCanvas('treeBefore', hasImbalance ? markedBeforeTree : step.beforeTree, hasImbalance ? step.imbalanceNode : null);
+            renderTreeOnCanvas('treeAfter', step.finalTree);
+            
+            let bfHtml = "";
+            if (hasImbalance && step.bfValue !== null) {
+                bfHtml = `<div class="balance-info">⚖️ 失衡结点 ${step.imbalanceNode} 的平衡因子 = ${step.bfValue}</div>`;
+            }
+            
+            stepTitle.innerHTML = `📌 第 ${currentStepIdx} 步 - 插入 ${step.inserted}`;
+            stepDetail.innerHTML = `
+                <div class="action-info">🔹 插入结点: <strong>${step.inserted}</strong></div>
+                ${bfHtml}
+                ${hasImbalance ? `<div class="imbalance">⚠️ 失衡类型：${step.imbalanceType}，失衡结点：${step.imbalanceNode}</div><div class="rotation">🔄 旋转操作：${step.rotationDesc}</div>` : '<div class="balance-info">✅ 插入后树仍然平衡，无需旋转</div>'}
+            `;
+            
+            let res = [];
+            if (step.finalTree) {
+                inorder(step.finalTree, res);
+            }
+            inorderDiv.innerHTML = `📋 中序遍历: [${res.join(', ')}] ${res.length === currentSequence.length ? '✅ 最终树保持 BST 性质' : ''}`;
+        }
+        
+        document.getElementById('prevBtn').disabled = (currentStepIdx === 0);
+        document.getElementById('nextBtn').disabled = (currentStepIdx === steps.length - 1);
+    }
+
+    // 解析输入
+    function parseInput(str) {
+        let parts = str.split(/[ ,，]+/);
+        let nums = [];
+        for (let p of parts) {
+            let n = parseInt(p);
+            if (!isNaN(n)) nums.push(n);
+        }
+        return nums;
+    }
+
+    // 事件绑定
+    document.getElementById('setSeqBtn').addEventListener('click', () => {
+        let inputVal = document.getElementById('seqInput').value;
+        let newSeq = parseInput(inputVal);
+        if (newSeq.length > 0) {
+            currentSequence = newSeq;
+            document.getElementById('currentSeqDisplay').innerHTML = `当前序列: ${currentSequence.join(', ')}`;
+            rebuildSteps();
+        } else {
+            alert('请输入有效的数字序列，如: 30,20,10');
+        }
+    });
+
+    document.getElementById('prevBtn').addEventListener('click', () => {
+        if (currentStepIdx > 0) { currentStepIdx--; renderCurrentStep(); }
+    });
+    
+    document.getElementById('nextBtn').addEventListener('click', () => {
+        if (currentStepIdx < steps.length - 1) { currentStepIdx++; renderCurrentStep(); }
+    });
+    
+    document.getElementById('resetBtn').addEventListener('click', () => {
+        currentStepIdx = 0;
+        renderCurrentStep();
+    });
+
+    // 初始化
+    rebuildSteps();
+</script>
+</body>
+</html>
